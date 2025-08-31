@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMG Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-crown"></i> OMG Admin</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li data-tab="users">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </li>
+                <li data-tab="withdrawals">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Withdrawals</span>
+                </li>
+                <li data-tab="transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </li>
+                <li data-tab="referrals">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Referral System</span>
+                </li>
+                <li data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="admin-info">
+                        <span id="adminName">Admin</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalUsers">0</h3>
+                                <p>Total Users</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalCoins">0</h3>
+                                <p>Total Coins</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingWithdrawals">0</h3>
+                                <p>Pending Withdrawals</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="todaySpins">0</h3>
+                                <p>Today's Spins</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-section">
+                        <div class="chart-card">
+                            <h3>Recent Activity</h3>
+                            <div id="recentActivity" class="activity-list">
+                                <!-- Recent activity will be populated here -->
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Quick Actions</h3>
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="showAddBonusModal()">
+                                    <i class="fas fa-plus"></i>
+                                    Add Bonus
+                                </button>
+                                <button class="action-btn" onclick="showBlockUserModal()">
+                                    <i class="fas fa-ban"></i>
+                                    Block User
+                                </button>
+                                <button class="action-btn" onclick="showSettingsModal()">
+                                    <i class="fas fa-cog"></i>
+                                    Update Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="users" class="tab-content">
+                    <div class="tab-header">
+                        <h2>User Management</h2>
+                        <div class="search-bar">
+                            <input type="text" id="userSearch" placeholder="Search users...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Balance</th>
+                                    <th>Referral Code</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Withdrawals Tab -->
+                <div id="withdrawals" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Withdrawal Requests</h2>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="pending">Pending</button>
+                            <button class="filter-btn" data-filter="approved">Approved</button>
+                            <button class="filter-btn" data-filter="rejected">Rejected</button>
+                        </div>
+                    </div>
+                    <div class="withdrawals-table-container">
+                        <table class="withdrawals-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Coins</th>
+                                    <th>UPI ID</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawalsTableBody">
+                                <!-- Withdrawals will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Transactions Tab -->
+                <div id="transactions" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Transaction History</h2>
+                        <div class="search-bar">
+                            <input type="text" id="transactionSearch" placeholder="Search transactions...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="transactions-table-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <!-- Transactions will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Referral System Tab -->
+                <div id="referrals" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Referral System</h2>
+                        <div class="referral-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Referrals:</span>
+                                <span class="stat-value" id="totalReferrals">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Active Referrals:</span>
+                                <span class="stat-value" id="activeReferrals">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="referral-tree-container">
+                        <h3>Referral Tree</h3>
+                        <div id="referralTree" class="referral-tree">
+                            <!-- Referral tree will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-content">
+                    <div class="tab-header">
+                        <h2>App Settings</h2>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="minWithdrawal">Minimum Withdrawal (coins)</label>
+                            <input type="number" id="minWithdrawal" min="100" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="coinValue">Coin Value (₹)</label>
+                            <input type="number" id="coinValue" min="0.01" step="0.01" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="dailySpinLimit">Daily Spin Limit</label>
+                            <input type="number" id="dailySpinLimit" min="1" max="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyReward">Daily Reward (coins)</label>
+                            <input type="number" id="dailyReward" min="10" step="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="referralBonus">Referral Bonus (coins)</label>
+                            <input type="number" id="referralBonus" min="100" step="100">
+                        </div>
+                        <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Bonus Modal -->
+    <div id="addBonusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Bonus to User</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="bonusUserId">User ID</label>
+                    <input type="text" id="bonusUserId" placeholder="Enter user ID">
+                </div>
+                <div class="form-group">
+                    <label for="bonusAmount">Bonus Amount (coins)</label>
+                    <input type="number" id="bonusAmount" min="1" step="1" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label for="bonusReason">Reason</label>
+                    <textarea id="bonusReason" placeholder="Enter reason for bonus"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('addBonusModal')">Cancel</button>
+                <button class="btn-primary" onclick="addBonus()">Add Bonus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block User Modal -->
+    <div id="blockUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Block/Unblock User</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="blockUserId">User ID</label>
+                    <input type="text" id="blockUserId" placeholder="Enter user ID">
+                </div>
+                <div class="form-group">
+                    <label for="blockReason">Reason</label>
+                    <textarea id="blockReason" placeholder="Enter reason for blocking"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('blockUserModal')">Cancel</button>
+                <button class="btn-danger" onclick="blockUser()">Block User</button>
+                <button class="btn-success" onclick="unblockUser()">Unblock User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Update App Settings</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalMinWithdrawal">Minimum Withdrawal (coins)</label>
+                    <input type="number" id="modalMinWithdrawal" min="100" step="100">
+                </div>
+                <div class="form-group">
+                    <label for="modalCoinValue">Coin Value (₹)</label>
+                    <input type="number" id="modalCoinValue" min="0.01" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="modalDailySpinLimit">Daily Spin Limit</label>
+                    <input type="number" id="modalDailySpinLimit" min="1" max="50">
+                </div>
+                <div class="form-group">
+                    <label for="modalDailyReward">Daily Reward (coins)</label>
+                    <input type="number" id="modalDailyReward" min="10" step="10">
+                </div>
+                <div class="form-group">
+                    <label for="modalReferralBonus">Referral Bonus (coins)</label>
+                    <input type="number" id="modalReferralBonus" min="100" step="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('settingsModal')">Cancel</button>
+                <button class="btn-primary" onclick="updateSettings()">Update Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
